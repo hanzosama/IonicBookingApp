@@ -1,0 +1,7 @@
+{
+  "name": "IonicBookingApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
