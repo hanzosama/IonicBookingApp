@@ -35,6 +35,7 @@ export class OffersService {
 
   getOffer(id: string) {
     //cloning response
-    return {...this._offers.find(offers => offers.id === id)};
+    return { ...this._offers.find(offers => offers.id === id) };
   }
+
 }
