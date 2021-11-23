@@ -10,10 +10,12 @@ import { PlacesService } from '../places-service.service';
 })
 export class SearchPage implements OnInit {
   loadedPlaces: Place[];
+  listedLoadedPlaces: Place[];
   constructor(private placesServices: PlacesService, private menuCtr: MenuController) { }
 
   ngOnInit() {
     this.loadedPlaces = this.placesServices.places;
+    this.listedLoadedPlaces = this.loadedPlaces.slice(1);
   }
 
   //Burger menu programatically
