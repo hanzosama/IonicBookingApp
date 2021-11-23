@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuController } from '@ionic/angular';
+import { SegmentChangeEventDetail } from '@ionic/core';
 import { Place } from '../place.model';
 import { PlacesService } from '../places-service.service';
 
@@ -21,6 +22,11 @@ export class SearchPage implements OnInit {
   //Burger menu programatically
   openSideMenu() {
     this.menuCtr.toggle();
+  }
+
+
+  onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
+    console.log(event.detail);
   }
 
 }

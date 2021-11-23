@@ -11,7 +11,11 @@
       <ion-input type="email" placeholder="Email"></ion-input>
     </ion-item>
   </ion-list>
-  <ion-button (click)="onLogIn()" color="primary" class="ion-padding-vertical">
+
+  <div class="ion-text-center">
+    <ion-spinner name="bubbles" color="primary" *ngIf="isLoading"></ion-spinner>
+  </div>
+  <ion-button (click)="onLogIn()" color="primary" class="ion-padding-vertical" *ngIf="!isLoading">
     Login
   </ion-button>
 

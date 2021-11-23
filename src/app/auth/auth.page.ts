@@ -8,15 +8,19 @@ import { AuthenticationService } from './authentication.service';
   styleUrls: ['./auth.page.scss'],
 })
 export class AuthPage implements OnInit {
-
+isLoading = false;
   constructor(private authService: AuthenticationService, private router: Router) { }
 
   ngOnInit() {
   }
 
   onLogIn() {
+    this.isLoading = true;
     this.authService.login();
-    this.router.navigateByUrl('/places/tabs/search');
+    setTimeout(() => {
+      this.router.navigateByUrl('/places/tabs/search');
+      this.isLoading = false;
+    }, 1500);
   }
 
 
