@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { LoadingController } from '@ionic/angular';
 import { PlacesService } from '../../places-service.service';
 
 @Component({
@@ -11,7 +12,11 @@ import { PlacesService } from '../../places-service.service';
 export class NewOfferPage implements OnInit {
   form: FormGroup;
 
-  constructor(private placesService: PlacesService, private router: Router) {}
+  constructor(
+    private placesService: PlacesService,
+    private router: Router,
+    private loaderCtr: LoadingController
+  ) {}
 
   ngOnInit() {
     //form to bind with the html code
@@ -44,15 +49,24 @@ export class NewOfferPage implements OnInit {
       return;
     }
 
-    this.placesService.addPlace(
-      this.form.value.title,
-      this.form.value.description,
-      +this.form.value.price,
-      new Date(this.form.value.dateFrom),
-      new Date(this.form.value.dateTo)
-    );
+    this.loaderCtr
+      .create({ message: 'Saving the place...' })
+      .then((loadingEl) => {
+        loadingEl.present();
 
-    this.form.reset();
-    this.router.navigateByUrl('/places/tabs/offers');
+        this.placesService
+          .addPlace(
+            this.form.value.title,
+            this.form.value.description,
+            +this.form.value.price,
+            new Date(this.form.value.dateFrom),
+            new Date(this.form.value.dateTo)
+          )
+          .subscribe(() => {
+            loadingEl.dismiss();
+            this.form.reset();
+            this.router.navigateByUrl('/places/tabs/offers');
+          });
+      });
   }
 }
