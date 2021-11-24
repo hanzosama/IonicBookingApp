@@ -9,17 +9,41 @@ import { Place } from 'src/app/places/place.model';
 })
 export class CreateBookingComponent implements OnInit {
   @Input() selectedPlace: Place;
-  constructor(private modalCtrl: ModalController) { }
+  @Input() selectedMode: 'select' | 'random';
 
-  ngOnInit() { }
+  startDate: string;
+  endDate: string;
+
+  constructor(private modalCtrl: ModalController) {}
+
+  ngOnInit() {
+    const availableFrom = new Date(this.selectedPlace.availableFrom);
+    const availableTo = new Date(this.selectedPlace.avaliableTo);
+
+    if (this.selectedMode === 'random') {
+      this.startDate = new Date(
+        availableFrom.getTime() +
+          Math.random() *
+            (availableTo.getTime() -
+              7 * 24 * 60 * 60 * 1000 -
+              availableFrom.getTime())
+      ).toISOString();
+
+      this.endDate = new Date(
+        new Date(this.startDate).getTime() +
+          Math.random() *
+            (new Date(this.startDate).getTime() +
+              6 * 24 * 60 * 60 * 1000 -
+              new Date(this.startDate).getTime())
+      ).toISOString();
+    }
+  }
 
   onBookPlace() {
-    this.modalCtrl.dismiss({message:'The place was booked'},'confirm');
-
+    this.modalCtrl.dismiss({ message: 'The place was booked' }, 'confirm');
   }
 
   onCancelBook() {
-    this.modalCtrl.dismiss(null,'cancel');
+    this.modalCtrl.dismiss(null, 'cancel');
   }
-
 }

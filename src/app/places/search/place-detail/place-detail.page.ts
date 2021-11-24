@@ -56,7 +56,7 @@ export class PlaceDetailPage implements OnInit {
   openBookingModal(mode: 'select' | 'random') {
     console.log(mode);
 
-    this.modalCtr.create({ component: CreateBookingComponent, componentProps: { selectedPlace: this.loadedPlace } })
+    this.modalCtr.create({ component: CreateBookingComponent, componentProps: { selectedPlace: this.loadedPlace , selectedMode: mode} })
       .then(modalElm => {
         modalElm.present();
         //This could be chained to the before then using return statement
