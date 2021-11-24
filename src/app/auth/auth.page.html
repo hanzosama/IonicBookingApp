@@ -1,19 +1,49 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Authenticate</ion-title>
+    <ion-title>{{isLogin ? 'Login': 'Singup'}}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-list>
-    <ion-item>
-      <ion-label position="floating">Email </ion-label>
-      <ion-input type="email" placeholder="Email"></ion-input>
-    </ion-item>
-  </ion-list>
+  <form #formAuth="ngForm" (ngSubmit)="onSubmitAuth(formAuth)">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" sizeSm="6" offsetSm="3">
+          <ion-list>
+            <ion-item>
+              <ion-label position="floating">Email </ion-label>
+              <ion-input type="email" placeholder="Email" ngModel name="email" email required #emailInput="ngModel">
+              </ion-input>
+            </ion-item>
+            <ion-item lines="none">
+              <p *ngIf="!emailInput.valid && emailInput.touched" color="danger">Should be a valid email adress</p>
+            </ion-item>
+            <ion-item>
+              <ion-label position="floating">Password</ion-label>
+              <ion-input type="password" placeholder="password" name="password" ngModel required minlength="6"
+                #passwordInput="ngModel">
+              </ion-input>
+            </ion-item>
+            <ion-item lines="none">
+              <p *ngIf="!passwordInput.valid && passwordInput.touched" color="danger">Should at least be 6 character
+                long</p>
+            </ion-item>
+          </ion-list>
+        </ion-col>
+        <ion-col size="12" sizeSm="6" offsetSm="3">
+          <ion-button
+          type="button"
+          color="primary"
+          fill="clear"
+          expand="block"
+          (click)="onSwitchAuthMode()">Switch to {{isLogin ? 'Singup': 'Login'}}</ion-button>
 
-  <ion-button (click)="onLogIn()" color="primary" class="ion-padding-vertical">
-    Login
-  </ion-button>
-
+          <ion-button type="submit" (click)="onLogIn()" color="primary" class="ion-padding-vertical" expand="block"
+            fill="outline" [disabled]="!formAuth.valid">
+            Login
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
 </ion-content>

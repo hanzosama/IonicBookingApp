@@ -22,7 +22,7 @@ export class PlacesService {
     ,
     new Place('p3',
       'Bogotá D.C',
-      'Not you city',
+      'The best City, the SIN CITY!',
       'https://es.investinbogota.org/sites/default/files/node/news/field_news_imagen/Emprendimientos%20en%20Bogota%CC%81.jpg',
       10.99)
   ];

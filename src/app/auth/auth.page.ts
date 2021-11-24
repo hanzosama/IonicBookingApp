@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
 import { AuthenticationService } from './authentication.service';
@@ -10,6 +11,7 @@ import { AuthenticationService } from './authentication.service';
 })
 export class AuthPage implements OnInit {
   isLoading = false;
+  isLogin = false;
   constructor(private authService: AuthenticationService, private router: Router, private loadingCtr: LoadingController) { }
 
   ngOnInit() {
@@ -26,6 +28,31 @@ export class AuthPage implements OnInit {
         loadingEl.dismiss();
       }, 1500);
     });
+  }
+
+  onSubmitAuth(authForm: NgForm) {
+    if (!authForm.valid) {
+      return;
+    }
+
+    const email = authForm.value.email;
+    const password = authForm.value.password;
+    console.log(email, password);
+
+    if (this.isLogin) {
+
+    } else { //Singup
+
+    }
+
+    //Clear after successful validation
+    authForm.resetForm();
+
+
+  }
+
+  onSwitchAuthMode() {
+    this.isLogin = !this.isLogin;
   }
 
 }
