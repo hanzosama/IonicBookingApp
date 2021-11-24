@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+<<<<<<< HEAD
 import { take, map, tap, delay, filter } from 'rxjs/operators';
+=======
+import { take, map, tap, delay } from 'rxjs/operators';
+>>>>>>> 381d3d2146fb7de7dd347296f7e5f7f4f41d0f73
 import { AuthenticationService } from '../auth/authentication.service';
 import { Place } from './place.model';
 
