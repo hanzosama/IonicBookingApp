@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MenuController } from '@ionic/angular';
 import { SegmentChangeEventDetail } from '@ionic/core';
+import { Subscription } from 'rxjs';
 import { Place } from '../place.model';
 import { PlacesService } from '../places-service.service';
 
@@ -9,14 +10,25 @@ import { PlacesService } from '../places-service.service';
   templateUrl: './search.page.html',
   styleUrls: ['./search.page.scss'],
 })
-export class SearchPage implements OnInit {
+export class SearchPage implements OnInit , OnDestroy{
   loadedPlaces: Place[];
   listedLoadedPlaces: Place[];
+  private placesSubject: Subscription;
   constructor(private placesServices: PlacesService, private menuCtr: MenuController) { }
 
+
   ngOnInit() {
-    this.loadedPlaces = this.placesServices.places;
-    this.listedLoadedPlaces = this.loadedPlaces.slice(1);
+    this.placesSubject = this.placesServices.places.subscribe(places =>{
+      this.loadedPlaces = places;
+      this.listedLoadedPlaces = this.loadedPlaces.slice(1);
+
+    });
+  }
+
+  ngOnDestroy() {
+    if(this.placesSubject){
+      this.placesSubject.unsubscribe();
+    }
   }
 
   //Burger menu programatically

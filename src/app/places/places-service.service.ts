@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+import { take, map } from 'rxjs/operators';
+import { AuthenticationService } from '../auth/authentication.service';
 import { Place } from './place.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PlacesService {
-  private _places: Place[] = [
+  private _places = new BehaviorSubject<Place[]>([
     new Place(
       'p1',
       'Manhatan',
@@ -13,7 +16,8 @@ export class PlacesService {
       'https://www.privatewallmag.com/wp-content/uploads/MANHATTAN-800x400.jpg',
       100.0,
       new Date('2019-01-01'),
-      new Date('2019-12-31')
+      new Date('2019-12-31'),
+      'u1'
     ),
     new Place(
       'p2',
@@ -22,7 +26,8 @@ export class PlacesService {
       'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
       99.99,
       new Date('2019-01-01'),
-      new Date('2019-12-31')
+      new Date('2019-12-31'),
+      'u1'
     ),
     new Place(
       'p3',
@@ -31,16 +36,45 @@ export class PlacesService {
       'https://es.investinbogota.org/sites/default/files/node/news/field_news_imagen/Emprendimientos%20en%20Bogota%CC%81.jpg',
       10.99,
       new Date('2019-01-01'),
-      new Date('2019-12-31')
+      new Date('2019-12-31'),
+      'u1'
     ),
-  ];
-  constructor() {}
+  ]);
+  constructor(private authService: AuthenticationService) {}
 
   get places() {
-    return [...this._places];
+    return this._places.asObservable();
   }
 
   getPlaces(id: string) {
-    return { ...this._places.find((places) => places.id === id) };
+    return this.places.pipe(
+      take(1),
+      map((places) => {
+        return { ...places.find((p) => p.id === id) };
+      })
+    );
+  }
+
+  addPlace(
+    title: string,
+    description: string,
+    price: number,
+    dateFrom: Date,
+    dateTo: Date
+  ) {
+    const newPlace = new Place(
+      Math.random().toString(),
+      title,
+      description,
+      'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
+      price,
+      dateFrom,
+      dateTo,
+      this.authService.userId
+    );
+
+    this.places.pipe(take(1)).subscribe((places) => {
+      this._places.next(places.concat(newPlace));
+    });
   }
 }

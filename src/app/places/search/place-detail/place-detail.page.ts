@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   ActionSheetController,
   ModalController,
   NavController,
 } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 import { CreateBookingComponent } from '../../../bookings/create-booking/create-booking.component';
 import { Place } from '../../place.model';
 import { PlacesService } from '../../places-service.service';
@@ -14,8 +15,9 @@ import { PlacesService } from '../../places-service.service';
   templateUrl: './place-detail.page.html',
   styleUrls: ['./place-detail.page.scss'],
 })
-export class PlaceDetailPage implements OnInit {
+export class PlaceDetailPage implements OnInit, OnDestroy {
   loadedPlace: Place;
+  private placesSubject: Subscription;
   //Injecting Navigation Controller of Angular
   constructor(
     private navController: NavController,
@@ -30,8 +32,18 @@ export class PlaceDetailPage implements OnInit {
       if (!params.has('placeId')) {
         this.navController.navigateBack('/places/tabs/search');
       }
-      this.loadedPlace = this.placesService.getPlaces(params.get('placeId'));
+      this.placesSubject = this.placesService
+        .getPlaces(params.get('placeId'))
+        .subscribe((place) => {
+          this.loadedPlace = place;
+        });
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.placesSubject) {
+      this.placesSubject.unsubscribe();
+    }
   }
 
   onBookPlace() {
