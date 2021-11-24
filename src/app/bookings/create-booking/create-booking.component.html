@@ -11,11 +11,12 @@
 </ion-header>
 
 <ion-content class="ion-padding ion-text-center">
+  <form (ngSubmit)="onBookPlace()" #bookingForm="ngForm">
   <ion-grid fixed>
     <ion-row>
       <ion-col sizeSm="6" offsetSm="3">
         <ion-item>
-          <ion-label>First Name</ion-label>
+          <ion-label position="floating">First Name</ion-label>
           <ion-input type="text" ngModel name="first-name" required></ion-input>
         </ion-item>
       </ion-col>
@@ -23,7 +24,7 @@
     <ion-row>
       <ion-col sizeSm="6" offsetSm="3">
         <ion-item>
-          <ion-label>Last Name</ion-label>
+          <ion-label  position="floating">Last Name</ion-label>
           <ion-input type="text" ngModel name="last-name" required></ion-input>
         </ion-item>
       </ion-col>
@@ -62,11 +63,11 @@
     </ion-row>
     <ion-row>
       <ion-col sizeSm="6" offsetSm="3">
-        <ion-button type="submit" color="primary">
+        <ion-button type="submit" color="primary" [disabled]="!form.valid || !datesValid()">
           Book!
         </ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>
-
+</form>
 </ion-content>
