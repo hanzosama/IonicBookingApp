@@ -10,23 +10,27 @@ import { PlacesService } from '../places-service.service';
   templateUrl: './search.page.html',
   styleUrls: ['./search.page.scss'],
 })
-export class SearchPage implements OnInit , OnDestroy{
+export class SearchPage implements OnInit, OnDestroy {
   loadedPlaces: Place[];
   listedLoadedPlaces: Place[];
+  relevantPlaces:Place[];
   private placesSubject: Subscription;
-  constructor(private placesServices: PlacesService, private menuCtr: MenuController) { }
 
+  constructor(
+    private placesServices: PlacesService,
+    private menuCtr: MenuController
+  ) {}
 
   ngOnInit() {
-    this.placesSubject = this.placesServices.places.subscribe(places =>{
+    this.placesSubject = this.placesServices.places.subscribe((places) => {
       this.loadedPlaces = places;
-      this.listedLoadedPlaces = this.loadedPlaces.slice(1);
-
+      this.relevantPlaces = this.loadedPlaces;
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
     });
   }
 
   ngOnDestroy() {
-    if(this.placesSubject){
+    if (this.placesSubject) {
       this.placesSubject.unsubscribe();
     }
   }
@@ -36,9 +40,7 @@ export class SearchPage implements OnInit , OnDestroy{
     this.menuCtr.toggle();
   }
 
-
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
     console.log(event.detail);
   }
-
 }
