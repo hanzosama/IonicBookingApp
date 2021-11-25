@@ -1,57 +1,107 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { take, map, tap, delay } from 'rxjs/operators';
+import { take, map, tap, delay, switchMap } from 'rxjs/operators';
 import { AuthenticationService } from '../auth/authentication.service';
 import { Place } from './place.model';
+
+
+/* new Place(
+  'p1',
+  'Manhatan',
+  'Hearth of new york',
+  'https://www.privatewallmag.com/wp-content/uploads/MANHATTAN-800x400.jpg',
+  100.0,
+  new Date('2019-01-01'),
+  new Date('2019-12-31'),
+  'u1'
+),
+new Place(
+  'p2',
+  "L'Amour Toujours",
+  'Romantic place in paris',
+  'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
+  99.99,
+  new Date('2019-01-01'),
+  new Date('2019-12-31'),
+  'u1'
+),
+new Place(
+  'p3',
+  'Bogotá D.C',
+  'The best City, the SIN CITY!',
+  'https://es.investinbogota.org/sites/default/files/node/news/field_news_imagen/Emprendimientos%20en%20Bogota%CC%81.jpg',
+  10.99,
+  new Date('2019-01-01'),
+  new Date('2019-12-31'),
+  'u2'
+), */
+
+interface PlaceData {
+  availableFrom: string;
+  avaliableTo: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  title: string;
+  userId: string;
+}
+
+const placesUrl =
+  'https://bookingionicapp-default-rtdb.firebaseio.com/offered-places.json';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PlacesService {
-  private _places = new BehaviorSubject<Place[]>([
-    new Place(
-      'p1',
-      'Manhatan',
-      'Hearth of new york',
-      'https://www.privatewallmag.com/wp-content/uploads/MANHATTAN-800x400.jpg',
-      100.0,
-      new Date('2019-01-01'),
-      new Date('2019-12-31'),
-      'u1'
-    ),
-    new Place(
-      'p2',
-      "L'Amour Toujours",
-      'Romantic place in paris',
-      'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
-      99.99,
-      new Date('2019-01-01'),
-      new Date('2019-12-31'),
-      'u1'
-    ),
-    new Place(
-      'p3',
-      'Bogotá D.C',
-      'The best City, the SIN CITY!',
-      'https://es.investinbogota.org/sites/default/files/node/news/field_news_imagen/Emprendimientos%20en%20Bogota%CC%81.jpg',
-      10.99,
-      new Date('2019-01-01'),
-      new Date('2019-12-31'),
-      'u2'
-    ),
-  ]);
-  constructor(private authService: AuthenticationService) {}
+  private _places = new BehaviorSubject<Place[]>([]);
+
+  constructor(
+    private authService: AuthenticationService,
+    private httpClient: HttpClient
+  ) {}
 
   get places() {
     return this._places.asObservable();
   }
 
+  fetchPlaces() {
+    return (
+      this.httpClient
+        // key word is use as a placehorlder to get the hidden value
+        .get<{ [key: string]: PlaceData }>(placesUrl)
+        .pipe(
+          map((data) => {
+            const places = [];
+            for (const key in data) {
+              if (data.hasOwnProperty(key)) {
+                places.push(
+                  new Place(
+                    key,
+                    data[key].title,
+                    data[key].description,
+                    data[key].imageUrl,
+                    data[key].price,
+                    new Date(data[key].availableFrom),
+                    new Date(data[key].avaliableTo),
+                    data[key].userId
+                  )
+                );
+              }
+            }
+            return places;
+          }),
+          tap((places) => {
+            this._places.next(places);
+          })
+        )
+    );
+  }
+
   getPlaces(id: string) {
     return this.places.pipe(
       take(1),
-      map((places) => {
-        return { ...places.find((p) => p.id === id) };
-      })
+      map((places) => ({ ...places.find((p) => p.id === id) }))
     );
   }
 
@@ -62,6 +112,7 @@ export class PlacesService {
     dateFrom: Date,
     dateTo: Date
   ) {
+    let generatedId = '';
     const newPlace = new Place(
       Math.random().toString(),
       title,
@@ -73,19 +124,34 @@ export class PlacesService {
       this.authService.userId
     );
 
-    return this.places.pipe(
+    return this.httpClient
+      .post<{ name: string }>(placesUrl, { ...newPlace, id: null })
+      .pipe(
+        switchMap((resData) => {
+          generatedId = resData.name;
+          return this.places;
+        }),
+        take(1),
+        tap((places) => {
+          newPlace.id = generatedId;
+          this._places.next(places.concat(newPlace));
+        })
+      );
+
+    /*  return this.places.pipe(
       take(1),
       delay(1000),
       tap((places) => {
         //adding request simulation
         this._places.next(places.concat(newPlace));
       })
-    );
+    ); */
   }
 
   updatePlace(id: string, title: string, description: string) {
     return this.places.pipe(
-      take(1),delay(1000),
+      take(1),
+      delay(1000),
       tap((places) => {
         const updatePlaceIndex = places.findIndex((pl) => pl.id === id);
         const updatedPlaces = [...places];
