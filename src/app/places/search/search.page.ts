@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MenuController } from '@ionic/angular';
 import { SegmentChangeEventDetail } from '@ionic/core';
 import { Subscription } from 'rxjs';
+import { AuthenticationService } from 'src/app/auth/authentication.service';
 import { Place } from '../place.model';
 import { PlacesService } from '../places-service.service';
 
@@ -13,12 +14,13 @@ import { PlacesService } from '../places-service.service';
 export class SearchPage implements OnInit, OnDestroy {
   loadedPlaces: Place[];
   listedLoadedPlaces: Place[];
-  relevantPlaces:Place[];
+  relevantPlaces: Place[];
   private placesSubject: Subscription;
 
   constructor(
     private placesServices: PlacesService,
-    private menuCtr: MenuController
+    private menuCtr: MenuController,
+    private authService: AuthenticationService
   ) {}
 
   ngOnInit() {
@@ -41,6 +43,14 @@ export class SearchPage implements OnInit, OnDestroy {
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
-    console.log(event.detail);
+    if (event.detail.value === 'all') {
+      this.relevantPlaces = this.loadedPlaces;
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+    } else {
+      this.relevantPlaces = this.loadedPlaces.filter(
+        (place) => place.userId !== this.authService.userId
+      );
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+    }
   }
 }
