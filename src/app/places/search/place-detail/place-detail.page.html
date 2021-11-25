@@ -3,12 +3,29 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/places/tabs/search/"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{loadedPlace.tittle}}</ion-title>
+    <ion-title>{{loadedPlace.title}}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-button color="primary" class="ion-margin" (click)="onBookPlace()">
-    Book
-  </ion-button>
+<ion-content>
+  <ion-grid fixed class="ion-no-padding">
+    <ion-row>
+      <ion-col sizeSm="6" offsetSm="3" class="ion-no-padding">
+        <ion-img [src]="loadedPlace.imageUrl"></ion-img>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col sizeSm="6" offsetSm="3" class="ion-text-center ion-padding">
+        <p>{{loadedPlace.description}}</p>
+      </ion-col>
+    </ion-row>
+    <ion-row *ngIf="isBookable">
+      <ion-col sizeSm="6" offsetSm="3" class="ion-text-center">
+        <ion-button color="primary" class="ion-margin" (click)="onBookPlace()">
+          Book
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
 </ion-content>

@@ -37,7 +37,7 @@ export class EditOfferPage implements OnInit, OnDestroy {
           this.offerEdited = place;
 
           this.form = new FormGroup({
-            title: new FormControl(this.offerEdited.tittle, {
+            title: new FormControl(this.offerEdited.title, {
               updateOn: 'blur',
               validators: [Validators.required],
             }),

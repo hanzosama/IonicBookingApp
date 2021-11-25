@@ -2,10 +2,13 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   ActionSheetController,
+  LoadingController,
   ModalController,
   NavController,
 } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { AuthenticationService } from 'src/app/auth/authentication.service';
+import { BookingService } from 'src/app/bookings/booking.service';
 import { CreateBookingComponent } from '../../../bookings/create-booking/create-booking.component';
 import { Place } from '../../place.model';
 import { PlacesService } from '../../places-service.service';
@@ -17,6 +20,7 @@ import { PlacesService } from '../../places-service.service';
 })
 export class PlaceDetailPage implements OnInit, OnDestroy {
   loadedPlace: Place;
+  isBookable = false;
   private placesSubject: Subscription;
   //Injecting Navigation Controller of Angular
   constructor(
@@ -24,7 +28,10 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private placesService: PlacesService,
     private modalCtr: ModalController,
-    private actionSheetCtr: ActionSheetController
+    private actionSheetCtr: ActionSheetController,
+    private bookingSerice: BookingService,
+    private loadingCtr: LoadingController,
+    private authService: AuthenticationService
   ) {}
 
   ngOnInit() {
@@ -35,7 +42,9 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
       this.placesSubject = this.placesService
         .getPlaces(params.get('placeId'))
         .subscribe((place) => {
+
           this.loadedPlace = place;
+          this.isBookable = place.userId !== this.authService.userId;
         });
     });
   }
@@ -88,7 +97,24 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         modalElm.onDidDismiss().then((resultData) => {
           console.log(resultData);
           if (resultData.role != null && resultData.role === 'confirm') {
-            console.log('Booked!');
+            this.loadingCtr
+              .create({ message: 'Booking place...' })
+              .then((loadingEl) => {
+                loadingEl.present();
+                const bookingData = resultData.data.bookingData;
+                this.bookingSerice
+                  .addBooking(
+                    this.loadedPlace.id,
+                    this.loadedPlace.title,
+                    this.loadedPlace.imageUrl,
+                    bookingData.firstName,
+                    bookingData.lastName,
+                    bookingData.guestNumber,
+                    bookingData.startDate,
+                    bookingData.endDate
+                  )
+                  .subscribe(() => loadingEl.dismiss());
+              });
           }
         });
       });
