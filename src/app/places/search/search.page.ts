@@ -15,7 +15,9 @@ export class SearchPage implements OnInit, OnDestroy {
   loadedPlaces: Place[];
   listedLoadedPlaces: Place[];
   relevantPlaces: Place[];
+  isLoading = false;
   private placesSubject: Subscription;
+  private serviceSubject: Subscription;
 
   constructor(
     private placesServices: PlacesService,
@@ -35,6 +37,17 @@ export class SearchPage implements OnInit, OnDestroy {
     if (this.placesSubject) {
       this.placesSubject.unsubscribe();
     }
+
+    if (this.serviceSubject) {
+      this.serviceSubject.unsubscribe();
+    }
+  }
+
+  ionViewWillEnter(){
+    this.isLoading = true;
+    this.serviceSubject = this.placesServices.fetchPlaces().subscribe(()=>{
+      this.isLoading = false;
+    });
   }
 
   //Burger menu programatically

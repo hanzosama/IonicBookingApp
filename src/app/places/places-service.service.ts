@@ -5,7 +5,6 @@ import { take, map, tap, delay, switchMap } from 'rxjs/operators';
 import { AuthenticationService } from '../auth/authentication.service';
 import { Place } from './place.model';
 
-
 /* new Place(
   'p1',
   'Manhatan',
@@ -47,8 +46,9 @@ interface PlaceData {
   userId: string;
 }
 
-const placesUrl =
-  'https://bookingionicapp-default-rtdb.firebaseio.com/offered-places.json';
+const mainUrl = 'https://bookingionicapp-default-rtdb.firebaseio.com/';
+
+const placesPath = 'offered-places.json';
 
 @Injectable({
   providedIn: 'root',
@@ -69,7 +69,7 @@ export class PlacesService {
     return (
       this.httpClient
         // key word is use as a placehorlder to get the hidden value
-        .get<{ [key: string]: PlaceData }>(placesUrl)
+        .get<{ [key: string]: PlaceData }>(mainUrl + placesPath)
         .pipe(
           map((data) => {
             const places = [];
@@ -125,7 +125,7 @@ export class PlacesService {
     );
 
     return this.httpClient
-      .post<{ name: string }>(placesUrl, { ...newPlace, id: null })
+      .post<{ name: string }>(mainUrl + placesPath, { ...newPlace, id: null })
       .pipe(
         switchMap((resData) => {
           generatedId = resData.name;
@@ -137,24 +137,15 @@ export class PlacesService {
           this._places.next(places.concat(newPlace));
         })
       );
-
-    /*  return this.places.pipe(
-      take(1),
-      delay(1000),
-      tap((places) => {
-        //adding request simulation
-        this._places.next(places.concat(newPlace));
-      })
-    ); */
   }
 
   updatePlace(id: string, title: string, description: string) {
+    let updatedPlaces: Place[];
     return this.places.pipe(
       take(1),
-      delay(1000),
-      tap((places) => {
-        const updatePlaceIndex = places.findIndex((pl) => pl.id === id);
-        const updatedPlaces = [...places];
+      switchMap((placesList) => {
+        const updatePlaceIndex = placesList.findIndex((pl) => pl.id === id);
+        updatedPlaces = [...placesList];
         const oldPlace = updatedPlaces[updatePlaceIndex];
         updatedPlaces[updatePlaceIndex] = new Place(
           oldPlace.id,
@@ -166,6 +157,12 @@ export class PlacesService {
           oldPlace.avaliableTo,
           oldPlace.userId
         );
+        return this.httpClient.put(mainUrl + `offered-places/${id}.json`, {
+          ...updatedPlaces[updatePlaceIndex],
+          id: null,
+        });
+      }),
+      tap(() => {
         this._places.next(updatedPlaces);
       })
     );
