@@ -7,6 +7,7 @@ import { IonicModule } from '@ionic/angular';
 import { NewOfferPageRoutingModule } from './new-offer-routing.module';
 
 import { NewOfferPage } from './new-offer.page';
+import { SharedModule } from '../../../shared/pickers/shared.module';
 
 //Using reactive form approach
 @NgModule({
@@ -14,8 +15,9 @@ import { NewOfferPage } from './new-offer.page';
     CommonModule,
     ReactiveFormsModule,
     IonicModule,
-    NewOfferPageRoutingModule
+    NewOfferPageRoutingModule,
+    SharedModule,
   ],
-  declarations: [NewOfferPage]
+  declarations: [NewOfferPage],
 })
 export class NewOfferPageModule {}
