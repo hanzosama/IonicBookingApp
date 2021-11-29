@@ -31,7 +31,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private placesService: PlacesService,
     private modalCtr: ModalController,
     private actionSheetCtr: ActionSheetController,
-    private bookingSerice: BookingService,
+    private bookingService: BookingService,
     private loadingCtr: LoadingController,
     private authService: AuthenticationService,
     private alertCtr: AlertController,
@@ -118,7 +118,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
               .then((loadingEl) => {
                 loadingEl.present();
                 const bookingData = resultData.data.bookingData;
-                this.bookingSerice
+                this.bookingService
                   .addBooking(
                     this.loadedPlace.id,
                     this.loadedPlace.title,
