@@ -1,19 +1,22 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button [defaultHref]="'/places/tabs/offers/'+offerEdited.id"></ion-back-button>
+      <ion-back-button [defaultHref]="'/places/tabs/offers/'+offerId"></ion-back-button>
     </ion-buttons>
     <ion-title>Edit Offer</ion-title>
     <ion-buttons slot="primary">
-      <ion-button (click)="onUpdateOffer()" [disabled]="!form.valid">
+      <ion-button (click)="onUpdateOffer()" [disabled]="!form?.valid">
         <ion-icon name="checkmark" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" [formGroup]="form">
-  <form>
+<ion-content class="ion-padding">
+  <div *ngIf="isLoading">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+  <form *ngIf="!isLoading" [formGroup]="form">
     <ion-grid>
       <ion-row>
         <ion-col sizeSm="6" offsetSm="3">
