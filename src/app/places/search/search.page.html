@@ -54,21 +54,22 @@
         </ion-card>
       </ion-col>
     </ion-row>
-
-    <ion-row>
-      <ion-col size="12" size-sm="8" offset-sm="2" class="ion-text-center">
-        <ion-virtual-scroll [items]="listedLoadedPlaces" approxItemHeight="70px">
-          <ion-item *virtualItem="let place" [routerLink]="['/','places','tabs','search',place.id]" detail>
-            <ion-thumbnail slot="start">
-              <ion-img [src]="place.imageUrl"></ion-img>
-            </ion-thumbnail>
-            <ion-label>
-              <h1>{{place.title}}</h1>
-              <p>{{place.description}}</p>
-            </ion-label>
-          </ion-item>
-        </ion-virtual-scroll>
-      </ion-col>
-    </ion-row>
   </ion-grid>
+
+  <ion-content class="ion-padding">
+    <cdk-virtual-scroll-viewport itemSize="1" minBufferPx="10" maxBufferPx="50" class="list-container">
+      <ion-list>
+        <ion-item *cdkVirtualFor="let place of listedLoadedPlaces"
+          [routerLink]="['/','places','tabs','search',place.id]" detail>
+          <ion-thumbnail slot="start">
+            <ion-img [src]="place.imageUrl"></ion-img>
+          </ion-thumbnail>
+          <ion-label>
+            <h1>{{place.title}}</h1>
+            <p>{{place.description}}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </cdk-virtual-scroll-viewport>
+  </ion-content>
 </ion-content>

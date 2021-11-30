@@ -8,12 +8,15 @@ import { SearchPageRoutingModule } from './search-routing.module';
 
 import { SearchPage } from './search.page';
 
+import { ScrollingModule } from '@angular/cdk/scrolling';
+
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    SearchPageRoutingModule
+    SearchPageRoutingModule,
+    ScrollingModule,
   ],
   declarations: [SearchPage]
 })
