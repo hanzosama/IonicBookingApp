@@ -31,6 +31,10 @@ export class MapModalComponent implements OnInit, AfterViewInit {
         googleMaps.event.addListenerOnce(map, 'idle', () => {
           this.renderer.addClass(mapEl, 'visible');
         });
+        map.addListener('click',event=>{
+          const selectedCoords = {lat:event.latLng.lat(),lng:event.latLng.lng()};
+          this.modaltCtr.dismiss(selectedCoords);
+        });
       })
       .catch((error) => console.log(error));
   }
@@ -50,7 +54,7 @@ export class MapModalComponent implements OnInit, AfterViewInit {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src =
-        'https://maps.googleapis.com/maps/api/js?key=';
+        'https://maps.googleapis.com/maps/api/js?key=AIzaSyCAP5Kj2T27V7QD3CtLnl6cWT_vk6V3R1E';
       script.async = true;
       script.defer = true;
       document.body.appendChild(script);
