@@ -1,11 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { delay, map, switchMap, take, tap } from 'rxjs/operators';
+import { map, switchMap, take, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { AuthenticationService } from '../auth/authentication.service';
 import { Booking } from './booking.model';
-
-const mainUrl = 'https://bookingionicapp-default-rtdb.firebaseio.com/';
 
 const bookingsPath = 'bookings.json';
 
@@ -37,7 +36,7 @@ export class BookingService {
   fecthBookins() {
     return this.http
       .get<{ [key: string]: BookingData }>(
-        mainUrl +
+        environment.firebaseAPIMainURL +
           bookingsPath +
           `?orderBy="userId"&equalTo="${this.authService.userId}"`
       )
@@ -96,7 +95,7 @@ export class BookingService {
     );
 
     return this.http
-      .post<{ name: string }>(mainUrl + bookingsPath, {
+      .post<{ name: string }>(environment.firebaseAPIMainURL + bookingsPath, {
         ...newBooking,
         id: null,
       })
@@ -114,7 +113,7 @@ export class BookingService {
   }
 
   cancelBooking(id: string) {
-    return this.http.delete(mainUrl + `bookings/${id}.json`).pipe(
+    return this.http.delete(environment.firebaseAPIMainURL + `bookings/${id}.json`).pipe(
       switchMap(() => this.bookings),
       take(1),
       tap((bookings) => {

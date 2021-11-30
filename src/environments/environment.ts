@@ -3,7 +3,11 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  googleApiKey: 'AIzaSyCAP5Kj2T27V7QD3CtLnl6cWT_vk6V3R1E',
+  firebaseAPIMainURL: 'https://bookingionicapp-default-rtdb.firebaseio.com/',
+  geoCodeAPIURL: 'https://maps.googleapis.com/maps/api/geocode/json',
+  staticMapAPIURL: 'https://maps.googleapis.com/maps/api/staticmap'
 };
 
 /*

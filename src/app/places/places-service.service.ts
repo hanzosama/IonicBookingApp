@@ -2,39 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, of } from 'rxjs';
 import { take, map, tap, switchMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { AuthenticationService } from '../auth/authentication.service';
 import { Place } from './place.model';
-
-/* new Place(
-  'p1',
-  'Manhatan',
-  'Hearth of new york',
-  'https://www.privatewallmag.com/wp-content/uploads/MANHATTAN-800x400.jpg',
-  100.0,
-  new Date('2019-01-01'),
-  new Date('2019-12-31'),
-  'u1'
-),
-new Place(
-  'p2',
-  "L'Amour Toujours",
-  'Romantic place in paris',
-  'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
-  99.99,
-  new Date('2019-01-01'),
-  new Date('2019-12-31'),
-  'u1'
-),
-new Place(
-  'p3',
-  'Bogotá D.C',
-  'The best City, the SIN CITY!',
-  'https://es.investinbogota.org/sites/default/files/node/news/field_news_imagen/Emprendimientos%20en%20Bogota%CC%81.jpg',
-  10.99,
-  new Date('2019-01-01'),
-  new Date('2019-12-31'),
-  'u2'
-), */
 
 interface PlaceData {
   availableFrom: string;
@@ -46,7 +16,6 @@ interface PlaceData {
   userId: string;
 }
 
-const mainUrl = 'https://bookingionicapp-default-rtdb.firebaseio.com/';
 
 const placesPath = 'offered-places.json';
 
@@ -69,7 +38,7 @@ export class PlacesService {
     return (
       this.httpClient
         // key word is use as a placehorlder to get the hidden value
-        .get<{ [key: string]: PlaceData }>(mainUrl + placesPath)
+        .get<{ [key: string]: PlaceData }>(environment.firebaseAPIMainURL+ placesPath)
         .pipe(
           map((data) => {
             const places = [];
@@ -100,7 +69,7 @@ export class PlacesService {
 
   getPlaces(id: string) {
     return this.httpClient
-      .get<PlaceData>(mainUrl + `offered-places/${id}.json`)
+      .get<PlaceData>(environment.firebaseAPIMainURL + `offered-places/${id}.json`)
       .pipe(
         map(
           (placeData) =>
@@ -138,7 +107,7 @@ export class PlacesService {
     );
 
     return this.httpClient
-      .post<{ name: string }>(mainUrl + placesPath, { ...newPlace, id: null })
+      .post<{ name: string }>(environment.firebaseAPIMainURL + placesPath, { ...newPlace, id: null })
       .pipe(
         switchMap((resData) => {
           generatedId = resData.name;
@@ -177,7 +146,7 @@ export class PlacesService {
           oldPlace.avaliableTo,
           oldPlace.userId
         );
-        return this.httpClient.put(mainUrl + `offered-places/${id}.json`, {
+        return this.httpClient.put(environment.firebaseAPIMainURL + `offered-places/${id}.json`, {
           ...updatedPlaces[updatePlaceIndex],
           id: null,
         });
