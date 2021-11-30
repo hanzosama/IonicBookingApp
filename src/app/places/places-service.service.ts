@@ -4,6 +4,7 @@ import { BehaviorSubject, of } from 'rxjs';
 import { take, map, tap, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthenticationService } from '../auth/authentication.service';
+import { PlaceLocation } from './location.model';
 import { Place } from './place.model';
 
 interface PlaceData {
@@ -14,8 +15,8 @@ interface PlaceData {
   price: number;
   title: string;
   userId: string;
+  location: PlaceLocation;
 }
-
 
 const placesPath = 'offered-places.json';
 
@@ -38,7 +39,9 @@ export class PlacesService {
     return (
       this.httpClient
         // key word is use as a placehorlder to get the hidden value
-        .get<{ [key: string]: PlaceData }>(environment.firebaseAPIMainURL+ placesPath)
+        .get<{ [key: string]: PlaceData }>(
+          environment.firebaseAPIMainURL + placesPath
+        )
         .pipe(
           map((data) => {
             const places = [];
@@ -53,7 +56,8 @@ export class PlacesService {
                     data[key].price,
                     new Date(data[key].availableFrom),
                     new Date(data[key].avaliableTo),
-                    data[key].userId
+                    data[key].userId,
+                    data[key].location
                   )
                 );
               }
@@ -69,7 +73,9 @@ export class PlacesService {
 
   getPlaces(id: string) {
     return this.httpClient
-      .get<PlaceData>(environment.firebaseAPIMainURL + `offered-places/${id}.json`)
+      .get<PlaceData>(
+        environment.firebaseAPIMainURL + `offered-places/${id}.json`
+      )
       .pipe(
         map(
           (placeData) =>
@@ -81,7 +87,8 @@ export class PlacesService {
               placeData.price,
               new Date(placeData.availableFrom),
               new Date(placeData.avaliableTo),
-              placeData.userId
+              placeData.userId,
+              placeData.location
             )
         )
       );
@@ -92,7 +99,8 @@ export class PlacesService {
     description: string,
     price: number,
     dateFrom: Date,
-    dateTo: Date
+    dateTo: Date,
+    location: PlaceLocation
   ) {
     let generatedId = '';
     const newPlace = new Place(
@@ -103,11 +111,15 @@ export class PlacesService {
       price,
       dateFrom,
       dateTo,
-      this.authService.userId
+      this.authService.userId,
+      location
     );
 
     return this.httpClient
-      .post<{ name: string }>(environment.firebaseAPIMainURL + placesPath, { ...newPlace, id: null })
+      .post<{ name: string }>(environment.firebaseAPIMainURL + placesPath, {
+        ...newPlace,
+        id: null,
+      })
       .pipe(
         switchMap((resData) => {
           generatedId = resData.name;
@@ -144,12 +156,16 @@ export class PlacesService {
           oldPlace.price,
           oldPlace.availableFrom,
           oldPlace.avaliableTo,
-          oldPlace.userId
+          oldPlace.userId,
+          oldPlace.location
         );
-        return this.httpClient.put(environment.firebaseAPIMainURL + `offered-places/${id}.json`, {
-          ...updatedPlaces[updatePlaceIndex],
-          id: null,
-        });
+        return this.httpClient.put(
+          environment.firebaseAPIMainURL + `offered-places/${id}.json`,
+          {
+            ...updatedPlaces[updatePlaceIndex],
+            id: null,
+          }
+        );
       }),
       tap(() => {
         this._places.next(updatedPlaces);

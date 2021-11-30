@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  Input,
   OnDestroy,
   OnInit,
   Renderer2,
@@ -17,8 +18,14 @@ import { environment } from '../../../../environments/environment';
 })
 export class MapModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('map') mapElementRef: ElementRef;
+  @Input() center = { lat: -34.397, lng: 150.644 };
+  @Input() selectable = true;
+  @Input() closeButtonText = 'Cancel';
+  @Input() titleText = 'Pick location';
+
   clickListener: any;
   googleMap: any;
+
   constructor(
     private modaltCtr: ModalController,
     private renderer: Renderer2
@@ -30,19 +37,28 @@ export class MapModalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.googleMap = googleMaps;
         const mapEl = this.mapElementRef.nativeElement;
         const map = new googleMaps.Map(mapEl, {
-          center: { lat: -34.397, lng: 150.644 },
+          center: this.center,
           zoom: 16,
         });
         googleMaps.event.addListenerOnce(map, 'idle', () => {
           this.renderer.addClass(mapEl, 'visible');
         });
-        this.clickListener = map.addListener('click', (event) => {
-          const selectedCoords = {
-            lat: event.latLng.lat(),
-            lng: event.latLng.lng(),
-          };
-          this.modaltCtr.dismiss(selectedCoords);
-        });
+        if (this.selectable) {
+          this.clickListener = map.addListener('click', (event) => {
+            const selectedCoords = {
+              lat: event.latLng.lat(),
+              lng: event.latLng.lng(),
+            };
+            this.modaltCtr.dismiss(selectedCoords);
+          });
+        } else {
+          const marker = new googleMaps.Marker({
+            position: this.center,
+            map,
+            title: 'Picked location',
+          });
+          marker.setMap(map);
+        }
       })
       .catch((error) => console.log(error));
   }
@@ -50,7 +66,9 @@ export class MapModalComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {}
 
   ngOnDestroy(): void {
-    this.googleMap.event.removeListener(this.clickListener);
+    if (this.clickListener) {
+      this.googleMap.event.removeListener(this.clickListener);
+    }
   }
 
   onCancel() {
