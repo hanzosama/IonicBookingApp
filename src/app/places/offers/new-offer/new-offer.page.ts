@@ -43,6 +43,7 @@ export class NewOfferPage implements OnInit {
         validators: [Validators.required],
       }),
       location: new FormControl(null, { validators: [Validators.required] }),
+      image: new FormControl(null),
     });
   }
 
@@ -50,11 +51,31 @@ export class NewOfferPage implements OnInit {
     this.form.patchValue({ location: locationPicked });
   }
 
+  onImagePicked(imageData: string | File) {
+    if (typeof imageData === 'string') {
+      fetch(
+        `data:image/jpeg;base64,${imageData.replace(
+          'data:image/jpeg;base64',
+          ''
+        )}`
+      )
+        .then((imageBase64) => {
+          const imageFile = imageBase64.blob;
+          this.form.patchValue({ image: imageFile });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      this.form.patchValue({ image: imageData });
+    }
+  }
+
   onCreateOffer() {
-    if (!this.form.valid) {
+    if (!this.form.valid || !this.form.get('image').value) {
       return;
     }
-
+console.log(this.form.value);
     this.loaderCtr
       .create({ message: 'Saving the place...' })
       .then((loadingEl) => {
