@@ -61,12 +61,12 @@
       </ion-row>
       <ion-row>
         <ion-col sizeSm="6" offsetSm="3">
-          <app-location-picker (locationPick)="onLocationPicked($event)"></app-location-picker>
+          <app-location-picker (locationPick)="onLocationPicked($event)" [showPreview]="form.get('location').value"></app-location-picker>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col sizeSm="6" offsetSm="3">
-          <app-image-picker (imagePicked)="onImagePicked($event)"></app-image-picker>
+          <app-image-picker (imagePicked)="onImagePicked($event)" [showPreview]="form.get('image').value"></app-image-picker>
         </ion-col>
       </ion-row>
     </ion-grid>

@@ -100,14 +100,15 @@ export class PlacesService {
     price: number,
     dateFrom: Date,
     dateTo: Date,
-    location: PlaceLocation
+    location: PlaceLocation,
+    imageUrl: string
   ) {
     let generatedId = '';
     const newPlace = new Place(
       Math.random().toString(),
       title,
       description,
-      'https://tophotel.news/wp-content/uploads/2018/12/25hours-francess.jpg',
+      imageUrl,
       price,
       dateFrom,
       dateTo,
@@ -170,6 +171,15 @@ export class PlacesService {
       tap(() => {
         this._places.next(updatedPlaces);
       })
+    );
+  }
+
+  uploadImage(image: File) {
+    const uploadData = new FormData();
+    uploadData.append('image', image);
+    return this.httpClient.post<{ imageUrl: string; imagePath: string }>(
+      environment.storageCustomFirebaseFuntionURL,
+      uploadData
     );
   }
 }

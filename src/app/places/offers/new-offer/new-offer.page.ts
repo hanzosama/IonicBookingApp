@@ -1,9 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Photo } from '@capacitor/camera';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import { LoadingController } from '@ionic/angular';
+import { switchMap } from 'rxjs/operators';
 import { PlaceLocation } from '../../location.model';
 import { PlacesService } from '../../places-service.service';
+
+const convertBlobToBase64 = (blob: Blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.readAsDataURL(blob);
+  });
 
 @Component({
   selector: 'app-new-offer',
@@ -53,15 +66,10 @@ export class NewOfferPage implements OnInit {
 
   onImagePicked(imageData: string | File) {
     if (typeof imageData === 'string') {
-      fetch(
-        `data:image/jpeg;base64,${imageData.replace(
-          'data:image/jpeg;base64',
-          ''
-        )}`
-      )
-        .then((imageBase64) => {
-          const imageFile = imageBase64.blob;
-          this.form.patchValue({ image: imageFile });
+      console.log('Image Data:', imageData);
+      this.savePicture(imageData)
+        .then((imageSaved) => {
+          this.form.patchValue({ image: imageSaved });
         })
         .catch((error) => {
           console.log(error);
@@ -75,20 +83,25 @@ export class NewOfferPage implements OnInit {
     if (!this.form.valid || !this.form.get('image').value) {
       return;
     }
-console.log(this.form.value);
+    console.log(this.form.value);
     this.loaderCtr
       .create({ message: 'Saving the place...' })
       .then((loadingEl) => {
         loadingEl.present();
-
         this.placesService
-          .addPlace(
-            this.form.value.title,
-            this.form.value.description,
-            +this.form.value.price,
-            new Date(this.form.value.dateFrom),
-            new Date(this.form.value.dateTo),
-            this.form.value.location
+          .uploadImage(this.form.get('image').value)
+          .pipe(
+            switchMap((uploadResp) =>
+              this.placesService.addPlace(
+                this.form.value.title,
+                this.form.value.description,
+                +this.form.value.price,
+                new Date(this.form.value.dateFrom),
+                new Date(this.form.value.dateTo),
+                this.form.value.location,
+                uploadResp.imageUrl
+              )
+            )
           )
           .subscribe(() => {
             loadingEl.dismiss();
@@ -96,5 +109,33 @@ console.log(this.form.value);
             this.router.navigateByUrl('/places/tabs/offers');
           });
       });
+  }
+
+  private async savePicture(webPath: string) {
+    // Convert photo to base64 format, required by Filesystem API to save
+    const base64Data = await this.readAsBase64(webPath);
+
+    // Write the file to the data directory
+    const fileName = new Date().getTime() + '.jpeg';
+    const savedFile = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Data,
+    });
+
+    // Use webPath to display the new image instead of base64 since it's
+    // already loaded into memory
+    return {
+      filepath: fileName,
+      webviewPath: webPath,
+    };
+  }
+
+  private async readAsBase64(webPath: string) {
+    // Fetch the photo, read as a blob, then convert to base64 format
+    const response = await fetch(webPath);
+    const blob = await response.blob();
+
+    return (await convertBlobToBase64(blob)) as string;
   }
 }
