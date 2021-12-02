@@ -13,8 +13,11 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const uuid = require('uuid/v4');
-
+const fbAdmin = require('firebase-admin');
 const { Storage } = require('@google-cloud/storage');
+
+fbAdmin.initializeApp({ credential: fbAdmin.credential.cert(require('./firebaseAdminAccess.json')) })
+
 
 const storage = new Storage({
   projectId: 'bookingionicapp'
@@ -25,6 +28,13 @@ exports.storeImage = functions.https.onRequest((req, res) => {
     if (req.method !== 'POST') {
       return res.status(500).json({ message: 'Not allowed.' });
     }
+
+    if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Not Authorized' });
+    }
+    let idToken;
+    idToken = req.headers.authorization.split('Bearer ')[1];
+
     const busboy = new Busboy({ headers: req.headers });
     let uploadData;
     let oldImagePath;
@@ -57,32 +67,31 @@ exports.storeImage = functions.https.onRequest((req, res) => {
         imagePath = oldImagePath;
       }
 
-      console.log(uploadData.type);
-      return storage
-        .bucket('bookingionicapp.appspot.com')
-        .upload(uploadData.filePath, {
-          uploadType: 'media',
-          destination: imagePath,
-          metadata: {
+      return fbAdmin.auth().verifyIdToken(idToken).then(decodedToken => {
+        return storage
+          .bucket('bookingionicapp.appspot.com')
+          .upload(uploadData.filePath, {
+            uploadType: 'media',
+            destination: imagePath,
             metadata: {
-              contentType: uploadData.type,
-              firebaseStorageDownloadTokens: id
+              metadata: {
+                contentType: uploadData.type,
+                firebaseStorageDownloadTokens: id
+              }
             }
-          }
-        })
-
-        .then(() => {
-          return res.status(201).json({
-            imageUrl:
-              'https://firebasestorage.googleapis.com/v0/b/' +
-              storage.bucket('bookingionicapp.appspot.com').name +
-              '/o/' +
-              encodeURIComponent(imagePath) +
-              '?alt=media&token=' +
-              id,
-            imagePath: imagePath
-          });
-        })
+          })
+      }).then(() => {
+        return res.status(201).json({
+          imageUrl:
+            'https://firebasestorage.googleapis.com/v0/b/' +
+            storage.bucket('bookingionicapp.appspot.com').name +
+            '/o/' +
+            encodeURIComponent(imagePath) +
+            '?alt=media&token=' +
+            id,
+          imagePath: imagePath
+        });
+      })
         .catch(error => {
           console.log(error);
           return res.status(401).json({ error: 'Unauthorized!' });

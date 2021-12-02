@@ -37,62 +37,66 @@ export class PlacesService {
   }
 
   fetchPlaces() {
-    return (
-      this.httpClient
-        // key word is use as a placehorlder to get the hidden value
-        .get<{ [key: string]: PlaceData }>(
-          environment.firebaseAPIMainURL + placesPath
-        )
-        .pipe(
-          map((data) => {
-            const places = [];
-            for (const key in data) {
-              if (data.hasOwnProperty(key)) {
-                places.push(
-                  new Place(
-                    key,
-                    data[key].title,
-                    data[key].description,
-                    data[key].imageUrl,
-                    data[key].price,
-                    new Date(data[key].availableFrom),
-                    new Date(data[key].avaliableTo),
-                    data[key].userId,
-                    data[key].location
-                  )
-                );
-              }
-            }
-            return places;
-          }),
-          tap((places) => {
-            this._places.next(places);
-          })
-        )
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) =>
+        this.httpClient
+          // key word is use as a placehorlder to get the hidden value
+          .get<{ [key: string]: PlaceData }>(
+            environment.firebaseAPIMainURL + placesPath + `?auth=${token}`
+          )
+      ),
+      map((data) => {
+        const places = [];
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+            places.push(
+              new Place(
+                key,
+                data[key].title,
+                data[key].description,
+                data[key].imageUrl,
+                data[key].price,
+                new Date(data[key].availableFrom),
+                new Date(data[key].avaliableTo),
+                data[key].userId,
+                data[key].location
+              )
+            );
+          }
+        }
+        return places;
+      }),
+      tap((places) => {
+        this._places.next(places);
+      })
     );
   }
 
   getPlaces(id: string) {
-    return this.httpClient
-      .get<PlaceData>(
-        environment.firebaseAPIMainURL + `offered-places/${id}.json`
-      )
-      .pipe(
-        map(
-          (placeData) =>
-            new Place(
-              id,
-              placeData.title,
-              placeData.description,
-              placeData.imageUrl,
-              placeData.price,
-              new Date(placeData.availableFrom),
-              new Date(placeData.avaliableTo),
-              placeData.userId,
-              placeData.location
-            )
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) =>
+        this.httpClient.get<PlaceData>(
+          environment.firebaseAPIMainURL +
+            `offered-places/${id}.json?auth=${token}`
         )
-      );
+      ),
+      map(
+        (placeData) =>
+          new Place(
+            id,
+            placeData.title,
+            placeData.description,
+            placeData.imageUrl,
+            placeData.price,
+            new Date(placeData.availableFrom),
+            new Date(placeData.avaliableTo),
+            placeData.userId,
+            placeData.location
+          )
+      )
+    );
   }
 
   addPlace(
@@ -106,10 +110,16 @@ export class PlacesService {
   ) {
     let generatedId = '';
     let newPlace: Place;
+    let fetchUserId: string;
     return this.authService.userId.pipe(
       take(1),
       switchMap((userId) => {
-        if (!userId) {
+        fetchUserId = userId;
+        return this.authService.token;
+      }),
+      take(1),
+      switchMap((token) => {
+        if (!fetchUserId) {
           throw new Error('User not found');
         }
         newPlace = new Place(
@@ -120,11 +130,11 @@ export class PlacesService {
           price,
           dateFrom,
           dateTo,
-          userId,
+          fetchUserId,
           location
         );
         return this.httpClient.post<{ name: string }>(
-          environment.firebaseAPIMainURL + placesPath,
+          environment.firebaseAPIMainURL + placesPath + `?auth=${token}`,
           {
             ...newPlace,
             id: null,
@@ -145,7 +155,13 @@ export class PlacesService {
 
   updatePlace(id: string, title: string, description: string) {
     let updatedPlaces: Place[];
-    return this.places.pipe(
+    let fectchToken: string;
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) => {
+        fectchToken = token;
+        return this.places;
+      }),
       take(1),
       switchMap((placesList) => {
         if (!placesList || placesList.length <= 0) {
@@ -170,7 +186,8 @@ export class PlacesService {
           oldPlace.location
         );
         return this.httpClient.put(
-          environment.firebaseAPIMainURL + `offered-places/${id}.json`,
+          environment.firebaseAPIMainURL +
+            `offered-places/${id}.json?auth=${fectchToken}`,
           {
             ...updatedPlaces[updatePlaceIndex],
             id: null,
@@ -188,9 +205,17 @@ export class PlacesService {
 
     const uploadData = new FormData();
     uploadData.append('image', image);
-    return this.httpClient.post<{ imageUrl: string; imagePath: string }>(
-      environment.storageCustomFirebaseFuntionURL,
-      uploadData
+
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) =>
+        this.httpClient.post<{ imageUrl: string; imagePath: string }>(
+          environment.storageCustomFirebaseFuntionURL,
+          uploadData,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          { headers: { Authorization: 'Bearer ' + token } }
+        )
+      )
     );
   }
 }

@@ -11,7 +11,14 @@ export class UserModel {
     if (!this.tokenExpDate || this.tokenExpDate <= new Date()) {
       return null;
     } else {
-     return this._token;
+      return this._token;
     }
+  }
+
+  get tokenDuration() {
+    if (!this.token) {
+      return 0;
+    }
+    return this.tokenExpDate.getTime() - new Date().getTime();
   }
 }
