@@ -8,7 +8,9 @@ export const environment = {
   firebaseAPIMainURL: 'https://bookingionicapp-default-rtdb.firebaseio.com/',
   geoCodeAPIURL: 'https://maps.googleapis.com/maps/api/geocode/json',
   staticMapAPIURL: 'https://maps.googleapis.com/maps/api/staticmap',
-  storageCustomFirebaseFuntionURL : 'https://us-central1-bookingionicapp.cloudfunctions.net/storeImage'
+  storageCustomFirebaseFuntionURL : 'https://us-central1-bookingionicapp.cloudfunctions.net/storeImage',
+  authenticationSignUpURL: 'https://identitytoolkit.googleapis.com/v1/accounts:signUp',
+  authenticationSignInURL: 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword'
 };
 
 /*

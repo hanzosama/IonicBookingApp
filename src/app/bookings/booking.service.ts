@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
@@ -34,40 +35,45 @@ export class BookingService {
   }
 
   fecthBookins() {
-    return this.http
-      .get<{ [key: string]: BookingData }>(
-        environment.firebaseAPIMainURL +
-          bookingsPath +
-          `?orderBy="userId"&equalTo="${this.authService.userId}"`
-      )
-      .pipe(
-        map((bookingData) => {
-          const bookings = [];
-          for (const key in bookingData) {
-            if (bookingData.hasOwnProperty(key)) {
-              bookings.push(
-                new Booking(
-                  key,
-                  bookingData[key].placeId,
-                  bookingData[key].userId,
-                  bookingData[key].placeTitle,
-                  bookingData[key].placeImage,
-                  bookingData[key].firstName,
-                  bookingData[key].lastName,
-                  bookingData[key].guestNumber,
-                  new Date(bookingData[key].bookedFrom),
-                  new Date(bookingData[key].bookedTo)
-                )
-              );
-            }
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap((userId) => {
+        if (!userId) {
+          throw new Error('User not found');
+        }
+        return this.http.get<{ [key: string]: BookingData }>(
+          environment.firebaseAPIMainURL +
+            bookingsPath +
+            `?orderBy="userId"&equalTo="${userId}"`
+        );
+      }),
+      map((bookingData) => {
+        const bookings = [];
+        for (const key in bookingData) {
+          if (bookingData.hasOwnProperty(key)) {
+            bookings.push(
+              new Booking(
+                key,
+                bookingData[key].placeId,
+                bookingData[key].userId,
+                bookingData[key].placeTitle,
+                bookingData[key].placeImage,
+                bookingData[key].firstName,
+                bookingData[key].lastName,
+                bookingData[key].guestNumber,
+                new Date(bookingData[key].bookedFrom),
+                new Date(bookingData[key].bookedTo)
+              )
+            );
           }
-          return bookings;
-        }),
-        take(1),
-        tap((bookings) => {
-          this._bookings.next(bookings);
-        })
-      );
+        }
+        return bookings;
+      }),
+      take(1),
+      tap((bookings) => {
+        this._bookings.next(bookings);
+      })
+    );
   }
 
   addBooking(
@@ -81,44 +87,55 @@ export class BookingService {
     dateTo: Date
   ) {
     let generatedId: string;
-    const newBooking = new Booking(
-      Math.random().toString(),
-      placeId,
-      this.authService.userId,
-      placeTitle,
-      placeImage,
-      firstName,
-      lastName,
-      guestNumber,
-      dateFrom,
-      dateTo
-    );
+    let newBooking;
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap((userId) => {
+        if (!userId) {
+          throw new Error('User not found');
+        }
+        newBooking = new Booking(
+          Math.random().toString(),
+          placeId,
+          userId,
+          placeTitle,
+          placeImage,
+          firstName,
+          lastName,
+          guestNumber,
+          dateFrom,
+          dateTo
+        );
 
-    return this.http
-      .post<{ name: string }>(environment.firebaseAPIMainURL + bookingsPath, {
-        ...newBooking,
-        id: null,
+        return this.http.post<{ name: string }>(
+          environment.firebaseAPIMainURL + bookingsPath,
+          {
+            ...newBooking,
+            id: null,
+          }
+        );
+      }),
+      switchMap((restData) => {
+        generatedId = restData.name;
+        return this.bookings;
+      }),
+      take(1),
+      tap((bookings) => {
+        newBooking.id = generatedId;
+        this._bookings.next(bookings.concat(newBooking));
       })
-      .pipe(
-        switchMap((restData) => {
-          generatedId = restData.name;
-          return this.bookings;
-        }),
-        take(1),
-        tap((bookings) => {
-          newBooking.id = generatedId;
-          this._bookings.next(bookings.concat(newBooking));
-        })
-      );
+    );
   }
 
   cancelBooking(id: string) {
-    return this.http.delete(environment.firebaseAPIMainURL + `bookings/${id}.json`).pipe(
-      switchMap(() => this.bookings),
-      take(1),
-      tap((bookings) => {
-        this._bookings.next(bookings.filter((b) => b.id !== id));
-      })
-    );
+    return this.http
+      .delete(environment.firebaseAPIMainURL + `bookings/${id}.json`)
+      .pipe(
+        switchMap(() => this.bookings),
+        take(1),
+        tap((bookings) => {
+          this._bookings.next(bookings.filter((b) => b.id !== id));
+        })
+      );
   }
 }

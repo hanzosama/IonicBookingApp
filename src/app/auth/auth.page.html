@@ -31,16 +31,12 @@
           </ion-list>
         </ion-col>
         <ion-col size="12" sizeSm="6" offsetSm="3">
-          <ion-button
-          type="button"
-          color="primary"
-          fill="clear"
-          expand="block"
-          (click)="onSwitchAuthMode()">Switch to {{isLogin ? 'Singup': 'Login'}}</ion-button>
+          <ion-button type="button" color="primary" fill="clear" expand="block" (click)="onSwitchAuthMode()">Switch to
+            {{isLogin ? 'Singup': 'Login'}}</ion-button>
 
-          <ion-button type="submit" (click)="onLogIn()" color="primary" class="ion-padding-vertical" expand="block"
+          <ion-button type="submit"  color="primary" class="ion-padding-vertical" expand="block"
             fill="outline" [disabled]="!formAuth.valid">
-            Login
+            {{ isLogin ? 'Login' : 'SingUp' }}
           </ion-button>
         </ion-col>
       </ion-row>

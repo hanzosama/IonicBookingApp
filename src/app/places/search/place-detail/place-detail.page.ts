@@ -8,6 +8,7 @@ import {
   NavController,
 } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { switchMap, take } from 'rxjs/operators';
 import { AuthenticationService } from 'src/app/auth/authentication.service';
 import { BookingService } from 'src/app/bookings/booking.service';
 import { MapModalComponent } from 'src/app/shared/pickers/map-modal/map-modal.component';
@@ -45,12 +46,22 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         this.navController.navigateBack('/places/tabs/search');
       }
       this.isLoading = true;
-      this.placesSubject = this.placesService
-        .getPlaces(params.get('placeId'))
+      let fetchUserId: string;
+      this.placesSubject = this.authService.userId
+        .pipe(
+          take(1),
+          switchMap((userId) => {
+            if (!userId) {
+              throw new Error('User not found');
+            }
+            fetchUserId = userId;
+            return this.placesService.getPlaces(params.get('placeId'));
+          })
+        )
         .subscribe(
           (place) => {
             this.loadedPlace = place;
-            this.isBookable = place.userId !== this.authService.userId;
+            this.isBookable = place.userId !== fetchUserId;
             this.isLoading = false;
           },
           (error) => {
@@ -154,7 +165,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
           },
           selectable: false,
           closeButtonText: 'Close',
-          titleText: this.loadedPlace.location.address
+          titleText: this.loadedPlace.location.address,
         },
       })
       .then((modalEl) => modalEl.present());

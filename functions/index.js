@@ -32,6 +32,11 @@ exports.storeImage = functions.https.onRequest((req, res) => {
     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
       const filePath = path.join(os.tmpdir(), filename);
       uploadData = { filePath: filePath, type: mimetype, name: filename };
+      functions.logger.log("Data loaded:", uploadData);
+
+      if (!uploadData) {
+        return res.status(500).json({ error: 'Not data available' });
+      }
       file.pipe(fs.createWriteStream(filePath));
     });
 
@@ -41,6 +46,12 @@ exports.storeImage = functions.https.onRequest((req, res) => {
 
     busboy.on('finish', () => {
       const id = uuid();
+      functions.logger.log("Data loaded:", uploadData);
+
+      if (!uploadData) {
+        return res.status(500).json({ error: 'Not data available' });
+      }
+
       let imagePath = 'images/' + id + '-' + uploadData.name;
       if (oldImagePath) {
         imagePath = oldImagePath;

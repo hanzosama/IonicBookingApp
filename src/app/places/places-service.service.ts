@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, of } from 'rxjs';
@@ -104,34 +105,42 @@ export class PlacesService {
     imageUrl: string
   ) {
     let generatedId = '';
-    const newPlace = new Place(
-      Math.random().toString(),
-      title,
-      description,
-      imageUrl,
-      price,
-      dateFrom,
-      dateTo,
-      this.authService.userId,
-      location
-    );
-
-    return this.httpClient
-      .post<{ name: string }>(environment.firebaseAPIMainURL + placesPath, {
-        ...newPlace,
-        id: null,
+    let newPlace: Place;
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap((userId) => {
+        if (!userId) {
+          throw new Error('User not found');
+        }
+        newPlace = new Place(
+          Math.random().toString(),
+          title,
+          description,
+          imageUrl,
+          price,
+          dateFrom,
+          dateTo,
+          userId,
+          location
+        );
+        return this.httpClient.post<{ name: string }>(
+          environment.firebaseAPIMainURL + placesPath,
+          {
+            ...newPlace,
+            id: null,
+          }
+        );
+      }),
+      switchMap((resData) => {
+        generatedId = resData.name;
+        return this.places;
+      }),
+      take(1),
+      tap((places) => {
+        newPlace.id = generatedId;
+        this._places.next(places.concat(newPlace));
       })
-      .pipe(
-        switchMap((resData) => {
-          generatedId = resData.name;
-          return this.places;
-        }),
-        take(1),
-        tap((places) => {
-          newPlace.id = generatedId;
-          this._places.next(places.concat(newPlace));
-        })
-      );
+    );
   }
 
   updatePlace(id: string, title: string, description: string) {
@@ -175,6 +184,8 @@ export class PlacesService {
   }
 
   uploadImage(image: File) {
+    console.log(image);
+
     const uploadData = new FormData();
     uploadData.append('image', image);
     return this.httpClient.post<{ imageUrl: string; imagePath: string }>(

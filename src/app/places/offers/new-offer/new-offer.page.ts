@@ -18,6 +18,28 @@ const convertBlobToBase64 = (blob: Blob) =>
     reader.readAsDataURL(blob);
   });
 
+  // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+  function base64toBlob(base64Data, contentType) {
+    contentType = contentType || '';
+    const sliceSize = 1024;
+    const byteCharacters = window.atob(base64Data);
+    const bytesLength = byteCharacters.length;
+    const slicesCount = Math.ceil(bytesLength / sliceSize);
+    const byteArrays = new Array(slicesCount);
+
+    for (let sliceIndex = 0; sliceIndex < slicesCount; ++sliceIndex) {
+      const begin = sliceIndex * sliceSize;
+      const end = Math.min(begin + sliceSize, bytesLength);
+
+      const bytes = new Array(end - begin);
+      for (let offset = begin, i = 0; offset < end; ++i, ++offset) {
+        bytes[i] = byteCharacters[offset].charCodeAt(0);
+      }
+      byteArrays[sliceIndex] = new Uint8Array(bytes);
+    }
+    return new Blob(byteArrays, { type: contentType });
+  }
+
 @Component({
   selector: 'app-new-offer',
   templateUrl: './new-offer.page.html',
@@ -64,7 +86,7 @@ export class NewOfferPage implements OnInit {
     this.form.patchValue({ location: locationPicked });
   }
 
-  onImagePicked(imageData: string | File) {
+ /*  onImagePicked(imageData: string | File) {
     if (typeof imageData === 'string') {
       console.log('Image Data:', imageData);
       this.savePicture(imageData)
@@ -77,6 +99,24 @@ export class NewOfferPage implements OnInit {
     } else {
       this.form.patchValue({ image: imageData });
     }
+  } */
+
+  onImagePicked(imageData: string | File) {
+    let imageFile;
+    if (typeof imageData === 'string') {
+      try {
+        imageFile = base64toBlob(
+          imageData.replace('data:image/jpeg;base64,', ''),
+          'image/jpeg'
+        );
+      } catch (error) {
+        console.log(error);
+        return;
+      }
+    } else {
+      imageFile = imageData;
+    }
+    this.form.patchValue({ image: imageFile });
   }
 
   onCreateOffer() {
@@ -126,6 +166,7 @@ export class NewOfferPage implements OnInit {
     // Use webPath to display the new image instead of base64 since it's
     // already loaded into memory
     return {
+      name:fileName,
       filepath: fileName,
       webviewPath: webPath,
     };
