@@ -35,18 +35,24 @@ export class BookingService {
   }
 
   fecthBookins() {
+    let fetchUserId: string;
     return this.authService.userId.pipe(
       take(1),
       switchMap((userId) => {
         if (!userId) {
           throw new Error('User not found');
         }
-        return this.http.get<{ [key: string]: BookingData }>(
+        fetchUserId = userId;
+        return this.authService.token;
+      }),
+      take(1),
+      switchMap((token) =>
+        this.http.get<{ [key: string]: BookingData }>(
           environment.firebaseAPIMainURL +
             bookingsPath +
-            `?orderBy="userId"&equalTo="${userId}"`
-        );
-      }),
+            `?orderBy="userId"&equalTo="${fetchUserId}"&auth=${token}`
+        )
+      ),
       map((bookingData) => {
         const bookings = [];
         for (const key in bookingData) {
@@ -88,16 +94,23 @@ export class BookingService {
   ) {
     let generatedId: string;
     let newBooking;
+    let fecthUserId: string;
+
     return this.authService.userId.pipe(
       take(1),
       switchMap((userId) => {
         if (!userId) {
           throw new Error('User not found');
         }
+        fecthUserId = userId;
+        return this.authService.token;
+      }),
+      take(1),
+      switchMap((token) => {
         newBooking = new Booking(
           Math.random().toString(),
           placeId,
-          userId,
+          fecthUserId,
           placeTitle,
           placeImage,
           firstName,
@@ -108,7 +121,7 @@ export class BookingService {
         );
 
         return this.http.post<{ name: string }>(
-          environment.firebaseAPIMainURL + bookingsPath,
+          environment.firebaseAPIMainURL + bookingsPath + `?auth=${token}`,
           {
             ...newBooking,
             id: null,
@@ -128,14 +141,18 @@ export class BookingService {
   }
 
   cancelBooking(id: string) {
-    return this.http
-      .delete(environment.firebaseAPIMainURL + `bookings/${id}.json`)
-      .pipe(
-        switchMap(() => this.bookings),
-        take(1),
-        tap((bookings) => {
-          this._bookings.next(bookings.filter((b) => b.id !== id));
-        })
-      );
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) =>
+        this.http.delete(
+          environment.firebaseAPIMainURL + `bookings/${id}.json?auth=${token}`
+        )
+      ),
+      switchMap(() => this.bookings),
+      take(1),
+      tap((bookings) => {
+        this._bookings.next(bookings.filter((b) => b.id !== id));
+      })
+    );
   }
 }
